@@ -16,6 +16,20 @@ The Cross-lingual TRansfer Evaluation of Multilingual Encoders (XTREME) benchmar
 
 For a full description of the benchmark, see [the paper](https://arxiv.org/abs/2003.11080).
 
+# Usage
+1. Build docker image
+```bash
+docker build -t xtreme .
+```
+2. Run docker image
+```bash
+bash scripts/run_docker.sh
+```
+3. Download dataset (in docker)
+```bash
+bash scripts/download_data.sh
+```
+
 # Tasks and Languages
 
 The tasks included in XTREME cover a range of standard paradigms in natural language processing, including sentence classification, structured prediction, sentence retrieval and question answering. The full list of tasks can be seen in the image below.

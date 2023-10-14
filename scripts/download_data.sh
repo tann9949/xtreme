@@ -17,6 +17,7 @@ REPO=$PWD
 DIR=$REPO/download/
 mkdir -p $DIR
 
+
 # download XNLI dataset
 function download_xnli {
     OUTPATH=$DIR/xnli-tmp/
@@ -257,8 +258,8 @@ function download_mewslix {
     ( # Use a subshell to keep things separate from an already active conda env.
     # If 'conda activate' fails below, try uncommenting the following lines,
     # based on https://github.com/conda/conda/issues/7980.
-    # CONDA_PATH=$(conda info | grep -i 'base environment' | awk '{print $4}')
-    # source $CONDA_PATH/etc/profile.d/conda.sh
+    CONDA_PATH=$(conda info | grep -i 'base environment' | awk '{print $4}')
+    source $CONDA_PATH/etc/profile.d/conda.sh
 
     # Create and activate a dedicated conda environment for Mewsli-X extraction.
     bash create-env.sh conda
@@ -297,17 +298,17 @@ function download_lareqa {
     echo "Successfully downloaded data at $OUTPATH" >> $DIR/download.log
 }
 
-download_xnli
-download_pawsx
-download_tatoeba
-download_bucc18
-download_squad
-download_xquad
-download_mlqa
-download_tydiqa
-download_udpos
-download_panx
-download_xcopa
-download_siqa
-download_mewslix
-download_lareqa
+download_xnli || { echo "Failed to download xnli"; exit 1; }
+download_pawsx || { echo "Failed to download pawsx"}; exit 1; } 
+download_tatoeba || { echo "Failed to download tatoeba"}; exit 1; } 
+download_bucc18 || { echo "Failed to download bucc18"}; exit 1; } 
+download_squad || { echo "Failed to download squad"}; exit 1; } 
+download_xquad || { echo "Failed to download xquad"}; exit 1; } 
+download_mlqa || { echo "Failed to download mlqa"}; exit 1; } 
+download_tydiqa || { echo "Failed to download tydiqa"}; exit 1; } 
+download_udpos || { echo "Failed to download udpos"}; exit 1; } 
+download_panx || { echo "Failed to download panx"}; exit 1; } 
+download_xcopa || { echo "Failed to download xcopa"}; exit 1; } 
+download_siqa || { echo "Failed to download siqa"}; exit 1; } 
+download_mewslix || { echo "Failed to download mewslix"}; exit 1; } 
+download_lareqa || { echo "Failed to download lareqa"}; exit 1; } 

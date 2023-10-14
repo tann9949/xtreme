@@ -25,14 +25,18 @@ conda init bash
 
 # If 'conda activate' fails below, try uncommenting the following lines,
 # based on https://github.com/conda/conda/issues/7980.
-# CONDA_PATH=$(conda info | grep -i 'base environment' | awk '{print $4}')
-# source $CONDA_PATH/etc/profile.d/conda.sh
+CONDA_PATH=$(conda info | grep -i 'base environment' | awk '{print $4}')
+source $CONDA_PATH/etc/profile.d/conda.sh
 
 conda activate xtreme
 
 # install latest transformer
 cd $LIB
-git clone https://github.com/huggingface/transformers
+# clone if not exists
+if [ ! -d transformers ]; then
+  git clone https://github.com/huggingface/transformers
+fi
+
 cd transformers
 git checkout cefd51c50cc08be8146c1151544495968ce8f2ad
 pip install .
@@ -46,8 +50,16 @@ pip install sacremoses
 pip install pythainlp
 pip install jieba
 
-git clone https://github.com/neubig/kytea.git && cd kytea
+# clone if not exits
+if [ ! -d kytea ]; then
+  git clone https://github.com/neubig/kytea.git
+fi
+
+cd kytea
 autoreconf -i
 ./configure --prefix=${CONDA_PREFIX}
 make && make install
 pip install kytea
+
+# install pytorch/seqeval
+pip install torch torchvision seqeval
