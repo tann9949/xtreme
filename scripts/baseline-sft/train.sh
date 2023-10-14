@@ -18,7 +18,7 @@ MODEL=${1:-xlm-roberta-base}
 TASK=${2:-panx}
 GPU=${3:-0}
 DATA_DIR=${4:-"$REPO/download/"}
-OUT_DIR=${5:-"$REPO/output/"}
+OUT_DIR=${5:-"$REPO/outputs/"}
 echo "Fine-tuning $MODEL on $TASK using GPU $GPU"
 echo "Load data from $DATA_DIR, and save models to $OUT_DIR"
 
@@ -31,7 +31,7 @@ echo "Load data from $DATA_DIR, and save models to $OUT_DIR"
 #   bash $REPO/scripts/train_udpos.sh $MODEL $GPU $DATA_DIR $OUT_DIR
 if [ $TASK == 'panx' ]; then
   bash $REPO/scripts/preprocess_panx.sh $MODEL $DATA_DIR
-  bash $REPO/scripts/train_panx.sh $MODEL $GPU $DATA_DIR $OUT_DIR
+  bash $REPO/scripts/baseline-sft/train_panx.sh $MODEL $GPU $DATA_DIR $OUT_DIR
 # elif [ $TASK == 'xquad' ]; then
 #   bash $REPO/scripts/train_qa.sh $MODEL squad $TASK $GPU $DATA_DIR $OUT_DIR
 # elif [ $TASK == 'mlqa' ]; then

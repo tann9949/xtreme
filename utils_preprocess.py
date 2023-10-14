@@ -83,7 +83,7 @@ def panx_tokenize_preprocess(args):
     out_dir = os.path.join(args.output_dir, lang)
     if not os.path.exists(out_dir):
       os.makedirs(out_dir)
-    if lang == 'en':
+    if lang in ['en', 'th']:
       files = ['dev', 'test', 'train']
     else:
       files = ['dev', 'test']

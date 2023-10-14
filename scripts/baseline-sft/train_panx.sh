@@ -17,7 +17,7 @@ REPO=$PWD
 MODEL=${1:-xlm-roberta-base}
 GPU=${2:-0}
 DATA_DIR=${3:-"$REPO/download/"}
-OUT_DIR=${4:-"$REPO/output/"}
+OUT_DIR=${4:-"$REPO/outputs/"}
 
 export CUDA_VISIBLE_DEVICES=$GPU
 TASK='panx'
