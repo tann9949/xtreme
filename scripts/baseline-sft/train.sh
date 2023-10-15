@@ -30,4 +30,3 @@ elif [ $TASK == 'panx' ]; then
 elif [ $TASK == 'tydiqa' ]; then
   bash $REPO/scripts/baseline-sft/train_qa.sh $MODEL tydiqa $TASK $GPU $DATA_DIR $OUT_DIR
 fi
-

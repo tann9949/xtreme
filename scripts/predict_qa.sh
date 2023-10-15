@@ -44,7 +44,7 @@ if [ $TGT == 'xquad' ]; then
 elif [ $TGT == 'mlqa' ]; then
   langs=( en es de ar hi vi zh )
 elif [ $TGT == 'tydiqa' ]; then
-  langs=( en ar bn fi id ko ru sw te )
+  langs=( en ar bn fi id ko ru sw te th )
 fi
 
 echo "************************"
