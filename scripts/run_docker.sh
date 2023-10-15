@@ -1,4 +1,4 @@
-GPU_DEVICES=0
+GPU_DEVICES=6
 
 docker run -it \
     --gpus="device=${GPU_DEVICES}" \

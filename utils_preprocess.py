@@ -361,11 +361,12 @@ def xnli_preprocess(args):
         writer.writerow([sent1, sent2, label])
     print(f'finish preprocess {outfile}')
 
-  infile = os.path.join(args.data_dir, 'XNLI-MT-1.0/multinli/multinli.train.en.tsv')
-  if not os.path.exists(args.output_dir):
-    os.makedirs(args.output_dir)
-  outfile = os.path.join(args.output_dir, 'train-en.tsv')
-  _preprocess_train_file(infile, outfile)
+  for train_lang in ["en", "th"]:
+    infile = os.path.join(args.data_dir, f'XNLI-MT-1.0/multinli/multinli.train.{train_lang}.tsv')
+    if not os.path.exists(args.output_dir):
+      os.makedirs(args.output_dir)
+    outfile = os.path.join(args.output_dir, f'train-{train_lang}.tsv')
+    _preprocess_train_file(infile, outfile)
 
   for split in ['test', 'dev']:
     infile = os.path.join(args.data_dir, 'XNLI-1.0/xnli.{}.tsv'.format(split))
@@ -457,10 +458,11 @@ def tydiqa_preprocess(args):
   for lang, iso in LANG2ISO.items():
     src_file = os.path.join(dev_dir, 'tydiqa-goldp-dev-%s.json' % lang)
     dst_file = os.path.join(dev_dir, 'tydiqa.goldp.%s.dev.json' % iso)
+    assert os.path.exists(src_file), src_file
     os.rename(src_file, dst_file)
 
   # Remove the test annotations to prevent accidental cheating
-  remove_qa_test_annotations(dev_dir)
+  # remove_qa_test_annotations(dev_dir)
 
 
 def remove_qa_test_annotations(test_dir):

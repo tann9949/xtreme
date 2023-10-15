@@ -1,10 +1,15 @@
+# ignore Thai tydiqa dataset
+download/
+!download/tydiqa/tydiqa-goldp-v1.1-train/tydiqa.goldp.th.train.json
+!download/tydiqa/tydiqa-goldp-v1.1-dev/tydiqa.goldp.th.dev.json
+
 models/
 figures/
 outputs/
 output/
 analysis/
 data/
-download/
+runs/
 *.tsv
 *.csv
 
