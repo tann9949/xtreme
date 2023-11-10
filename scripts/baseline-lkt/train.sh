@@ -22,10 +22,8 @@ OUT_DIR=${5:-"$REPO/outputs/"}
 echo "Fine-tuning $MODEL on $TASK using GPU $GPU"
 echo "Load data from $DATA_DIR, and save models to $OUT_DIR"
 
-# if [ $TASK == 'pawsx' ]; then
-#   bash $REPO/scripts/train_pawsx.sh $MODEL $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'xnli' ]; then
-#   bash $REPO/scripts/train_xnli.sh $MODEL $GPU $DATA_DIR $OUT_DIR
+if [ $TASK == 'xnli' ]; then
+  bash $REPO/scripts/baseline-lkt/train_xnli.sh $MODEL $GPU $DATA_DIR $OUT_DIR
 elif [ $TASK == 'udpos' ]; then
   bash $REPO/scripts/preprocess_udpos.sh $MODEL $DATA_DIR
   bash $REPO/scripts/baseline-lkt/train_udpos.sh $MODEL $GPU $DATA_DIR $OUT_DIR
@@ -34,18 +32,7 @@ elif [ $TASK == 'panx' ]; then
   bash $REPO/scripts/baseline-lkt/train_panx.sh $MODEL $GPU $DATA_DIR $OUT_DIR
 elif [ $TASK == 'xquad' ]; then
   bash $REPO/scripts/baseline-lkt/train_qa.sh $MODEL squad $TASK $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'mlqa' ]; then
-#   bash $REPO/scripts/train_qa.sh $MODEL squad $TASK $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'tydiqa' ]; then
-#   bash $REPO/scripts/train_qa.sh $MODEL tydiqa $TASK $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'bucc2018' ]; then
-#   bash $REPO/scripts/run_bucc2018.sh $MODEL $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'tatoeba' ]; then
-#   bash $REPO/scripts/run_tatoeba.sh $MODEL $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'mewslix' ]; then
-#   bash $REPO/scripts/train_mewslix.sh $MODEL $GPU $DATA_DIR $OUT_DIR
-# elif [ $TASK == 'lareqa' ]; then
-#   bash $REPO/scripts/train_lareqa.sh $MODEL $GPU $DATA_DIR $OUT_DIR
-#   bash $REPO/scripts/run_eval_lareqa.sh $MODEL $GPU $DATA_DIR $OUT_DIR
+elif [ $TASK == 'tydiqa' ]; then
+  bash $REPO/scripts/baseline-lkt/train_qa.sh $MODEL tydiqa $TASK $GPU $DATA_DIR $OUT_DIR
 fi
 

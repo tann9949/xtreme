@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 
-from transformers.modeling_xlm import XLMModel, XLMPreTrainedModel, XLM_START_DOCSTRING, XLM_INPUTS_DOCSTRING
+from transformers.models.xlm.modeling_xlm import XLMModel, XLMPreTrainedModel, XLM_INPUTS_DOCSTRING, XLM_START_DOCSTRING
 from transformers import XLMConfig, add_start_docstrings
 
 @add_start_docstrings("""XLM Model with a token classification head on top (a linear layer on top of

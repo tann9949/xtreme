@@ -44,11 +44,14 @@ from transformers import (
   BertConfig,
   BertTokenizer,
   BertForTokenClassification,
+  BERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
   XLMConfig,
   XLMTokenizer,
   XLMRobertaConfig,
   XLMRobertaTokenizer,
-  XLMRobertaForTokenClassification
+  XLMRobertaForTokenClassification,
+  XLM_PRETRAINED_CONFIG_ARCHIVE_MAP,
+  XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP
 )
 from xlm import XLMForTokenClassification
 
@@ -56,8 +59,8 @@ from xlm import XLMForTokenClassification
 logger = logging.getLogger(__name__)
 
 ALL_MODELS = sum(
-  (tuple(conf.pretrained_config_archive_map.keys())
-    for conf in (BertConfig, XLMConfig, XLMRobertaConfig)),
+  (tuple(conf)
+    for conf in (BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP)),
   ()
 )
 

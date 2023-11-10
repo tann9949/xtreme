@@ -298,6 +298,16 @@ function download_lareqa {
     echo "Successfully downloaded data at $OUTPATH" >> $DIR/download.log
 }
 
+function download_wangchanberta_dataset {
+  echo "download wangchanberta dataset"
+  OUTPUT=$DIR/wangchanberta_dataset
+  mkdir -p $OUTPUT
+  cd $OUTPUT
+  wget https://github.com/vistec-AI/thai2transformers/releases/download/att-v1.0/cleaned_datasets.acbe0f97cf.zip -q --show-progress
+  unzip cleaned_datasets.acbe0f97cf.zip
+  rm cleaned_datasets.acbe0f97cf.zip
+}
+
 # download_xnli || { echo "Failed to download xnli"; exit 1; }
 # download_pawsx || { echo "Failed to download pawsx"}; exit 1; } 
 # download_tatoeba || { echo "Failed to download tatoeba"}; exit 1; } 

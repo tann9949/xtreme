@@ -17,7 +17,7 @@
 
 REPO=$PWD
 MODEL=${1:-xlm-roberta-base}
-SRC=${2:-squad}
+SRC=${2:-tydiqa}
 TGT=${3:-xquad}
 GPU=${4:-0}
 DATA_DIR=${5:-"$REPO/download/"}
@@ -72,7 +72,7 @@ CUDA_VISIBLE_DEVICES=$GPU python third_party/run_squad.py \
   --output_dir ${MODEL_PATH} \
   --weight_decay 0.0001 \
   --threads 8 \
-  --train_lang th \
+  --train_lang en \
   --eval_lang th
 
 # predict

@@ -18,7 +18,7 @@
 
 import logging
 
-from transformers.configuration_roberta import RobertaConfig
+from transformers.models.roberta.configuration_roberta import RobertaConfig
 from transformers.file_utils import add_start_docstrings
 from bert import BertForRetrieval
 from roberta import (

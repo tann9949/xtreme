@@ -43,6 +43,9 @@ from transformers import (
   XLMRobertaTokenizer,
   XLMRobertaForSequenceClassification,
   get_linear_schedule_with_warmup,
+  CamembertConfig,
+  CamembertForSequenceClassification,
+  CamembertTokenizer,
 )
 
 from processors.utils import convert_examples_to_features
@@ -67,6 +70,7 @@ MODEL_CLASSES = {
   "bert": (BertConfig, BertForSequenceClassification, BertTokenizer),
   "xlm": (XLMConfig, XLMForSequenceClassification, XLMTokenizer),
   "xlmr": (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
+  "wangchanberta": (CamembertConfig, CamembertForSequenceClassification, CamembertTokenizer)
 }
 
 PROCESSORS = {

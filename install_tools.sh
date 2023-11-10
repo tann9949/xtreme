@@ -31,16 +31,17 @@ source $CONDA_PATH/etc/profile.d/conda.sh
 conda activate xtreme
 
 # install latest transformer
-cd $LIB
-# clone if not exists
-if [ ! -d transformers ]; then
-  git clone https://github.com/huggingface/transformers
-fi
+pip install -U transformers
+# cd $LIB
+# # clone if not exists
+# if [ ! -d transformers ]; then
+#   git clone https://github.com/huggingface/transformers
+# fi
 
-cd transformers
-git checkout cefd51c50cc08be8146c1151544495968ce8f2ad
-pip install .
-cd $LIB
+# cd transformers
+# git checkout cefd51c50cc08be8146c1151544495968ce8f2ad
+# pip install .
+# cd $LIB
 
 pip install seqeval
 pip install tensorboardx
@@ -62,4 +63,5 @@ make && make install
 pip install kytea
 
 # install pytorch/seqeval
-pip install torch torchvision seqeval
+pip install torch torchvision seqeval datasets peft
+pip install protobuf==3.20
