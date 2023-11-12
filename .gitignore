@@ -143,4 +143,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# vscode
 .vscode
+
+# notebooks
+notebooks
+**/*.ipynb*

@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 
 from transformers.file_utils import is_tf_available, is_torch_available
-from transformers.tokenization_bert import whitespace_tokenize
+from transformers.models.bert.tokenization_bert import whitespace_tokenize
 from transformers import DataProcessor
 
 if is_torch_available():
@@ -111,6 +111,8 @@ def squad_convert_example_to_features(example, max_seq_length, doc_stride, max_q
         for sub_token in sub_tokens:
             tok_to_orig_index.append(i)
             all_doc_tokens.append(sub_token)
+            
+    # print("ALL_DOC_TOKENS>", len(all_doc_tokens), all_doc_tokens)
 
     if is_training and not example.is_impossible:
         tok_start_position = orig_to_tok_index[example.start_position]
@@ -128,25 +130,47 @@ def squad_convert_example_to_features(example, max_seq_length, doc_stride, max_q
 
     truncated_query = tokenizer.encode(example.question_text, add_special_tokens=False, max_length=max_query_length)
     sequence_added_tokens = (
-        tokenizer.max_len - tokenizer.max_len_single_sentence + 1
+        tokenizer.model_max_length - tokenizer.max_len_single_sentence + 1
         if "roberta" in str(type(tokenizer))
-        else tokenizer.max_len - tokenizer.max_len_single_sentence
+        else tokenizer.model_max_length - tokenizer.max_len_single_sentence
     )
-    sequence_pair_added_tokens = tokenizer.max_len - tokenizer.max_len_sentences_pair
+    sequence_pair_added_tokens = tokenizer.model_max_length - tokenizer.max_len_sentences_pair
 
     span_doc_tokens = all_doc_tokens
-    while len(spans) * doc_stride < len(all_doc_tokens):
+    # count = 0
+    while (len(spans) * doc_stride < len(all_doc_tokens)) and len(span_doc_tokens) > 0:
+        
+        # print("SPANS>", spans)
+        
+        # print("COUNT>", count)
+        # count += 1
 
+        # deprecated
+        # encoded_dict = tokenizer.encode_plus(
+        #     truncated_query if tokenizer.padding_side == "right" else span_doc_tokens,
+        #     span_doc_tokens if tokenizer.padding_side == "right" else truncated_query,
+        #     max_length=max_seq_length,
+        #     return_overflowing_tokens=True,
+        #     pad_to_max_length=True,
+        #     stride=max_seq_length - doc_stride - len(truncated_query) - sequence_pair_added_tokens,
+        #     truncation_strategy="only_second" if tokenizer.padding_side == "right" else "only_first",
+        #     return_token_type_ids=True
+        # )
+        # print("truncated_query>\n", tokenizer.decode(truncated_query))
+        # print("span_doc_tokens>\n", span_doc_tokens)
         encoded_dict = tokenizer.encode_plus(
             truncated_query if tokenizer.padding_side == "right" else span_doc_tokens,
             span_doc_tokens if tokenizer.padding_side == "right" else truncated_query,
             max_length=max_seq_length,
+            padding='max_length',
+            truncation='only_second' if tokenizer.padding_side == "right" else 'only_first',
             return_overflowing_tokens=True,
-            pad_to_max_length=True,
-            stride=max_seq_length - doc_stride - len(truncated_query) - sequence_pair_added_tokens,
-            truncation_strategy="only_second" if tokenizer.padding_side == "right" else "only_first",
             return_token_type_ids=True
         )
+        
+        # print("encoded_dict>\n", tokenizer.decode(encoded_dict["input_ids"]))
+
+
 
         paragraph_len = min(
             len(all_doc_tokens) - len(spans) * doc_stride,

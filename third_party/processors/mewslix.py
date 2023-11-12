@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 
 from transformers.file_utils import is_tf_available, is_torch_available
-from transformers.tokenization_bert import whitespace_tokenize
+from transformers.models.bert.tokenization_bert import whitespace_tokenize
 from transformers import DataProcessor
 
 import utils_mewslix

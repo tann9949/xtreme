@@ -38,7 +38,7 @@ elif [ $MODEL == "xlm-roberta-large" ] || [ $MODEL == "xlm-roberta-base" ]; then
 fi
 
 # Model path where trained model should be stored
-MODEL_PATH=$OUT_DIR//baseline-sft/$SRC/${MODEL}_LR${LR}_EPOCH${NUM_EPOCHS}_maxlen${MAXL}_batchsize${BATCH_SIZE}_gradacc${GRAD_ACC}
+MODEL_PATH=$OUT_DIR/baseline-sft/$SRC/${MODEL}_LR${LR}_EPOCH${NUM_EPOCHS}_maxlen${MAXL}_batchsize${BATCH_SIZE}_gradacc${GRAD_ACC}
 mkdir -p $MODEL_PATH
 # Train either on the SQuAD or TyDiQa-GoldP English train file
 if [ $SRC == 'squad' ]; then

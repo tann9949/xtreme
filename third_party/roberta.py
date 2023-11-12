@@ -22,7 +22,12 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss, MSELoss
 
-from transformers.models.bert.modeling_bert import BertEmbeddings, BertLayerNorm, BertModel, BertPreTrainedModel, gelu
+from transformers.models.bert.modeling_bert import (
+    BertEmbeddings, 
+    BertModel, 
+    BertPreTrainedModel, 
+)
+from transformers.activations import gelu
 from transformers.models.roberta.configuration_roberta import RobertaConfig
 from transformers.file_utils import add_start_docstrings
 
@@ -52,7 +57,7 @@ class RobertaEmbeddings(BertEmbeddings):
         config.max_position_embeddings, config.hidden_size, padding_idx=self.padding_idx
     )
 
-  def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None):
+  def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None, **kwargs):
     if position_ids is None:
       if input_ids is not None:
         # Create the position ids from the input token ids. Any padded tokens remain padded.
@@ -301,7 +306,7 @@ class RobertaLMHead(nn.Module):
   def __init__(self, config):
     super(RobertaLMHead, self).__init__()
     self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-    self.layer_norm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+    self.layer_norm = torch.nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
 
     self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
     self.bias = nn.Parameter(torch.zeros(config.vocab_size))

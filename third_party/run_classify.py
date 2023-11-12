@@ -60,10 +60,18 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+from transformers import (
+  BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+  XLM_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+  XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP
+)
+
 ALL_MODELS = sum(
-  (tuple(conf.pretrained_config_archive_map.keys()) 
-    for conf in (BertConfig, XLMConfig, XLMRobertaConfig)),
-  ()
+  (tuple(conf.keys()) 
+   for conf in (
+     BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+     XLM_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+     XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP)), ()
 )
 
 MODEL_CLASSES = {
