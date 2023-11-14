@@ -65,6 +65,8 @@ pip install kytea
 # install pytorch/seqeval
 pip install torch torchvision seqeval datasets peft
 pip install protobuf==3.20
+pip install wandb
 
 # make sure jupyterlab is usable
-pip install -U jupyter jupyterlab ipython jupyter_client traitlets nbformat nbconvert
+pip install -U jupyter jupyterlab ipython jupyter_client traitlets nbformat nbconvert ipywidgets
+jupyter labextension install @jupyter-widgets/jupyterlab-manager

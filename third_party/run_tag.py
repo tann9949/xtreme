@@ -41,6 +41,10 @@ from transformers import (
   AdamW,
   get_linear_schedule_with_warmup,
   WEIGHTS_NAME,
+  CamembertConfig,
+  CamembertTokenizer,
+  CamembertForTokenClassification,
+  CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
   BertConfig,
   BertTokenizer,
   BertForTokenClassification,
@@ -60,7 +64,12 @@ logger = logging.getLogger(__name__)
 
 ALL_MODELS = sum(
   (tuple(conf)
-    for conf in (BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP)),
+    for conf in (
+      BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+      XLM_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+      XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP,
+      CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+    )),
   ()
 )
 
@@ -68,6 +77,7 @@ MODEL_CLASSES = {
   "bert": (BertConfig, BertForTokenClassification, BertTokenizer),
   "xlm": (XLMConfig, XLMForTokenClassification, XLMTokenizer),
   "xlmr": (XLMRobertaConfig, XLMRobertaForTokenClassification, XLMRobertaTokenizer),
+  "camembert": (CamembertConfig, CamembertForTokenClassification, CamembertTokenizer),
 }
 
 

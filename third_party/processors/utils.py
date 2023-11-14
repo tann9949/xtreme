@@ -119,11 +119,22 @@ def convert_examples_to_features(
     #   example = processor.tfds_map(example)
 
     if isinstance(tokenizer, XLMTokenizer):
-      inputs = tokenizer.encode_plus(example.text_a, example.text_b, add_special_tokens=True, max_length=max_length, lang=example.language)
+      inputs = tokenizer.encode_plus(
+        example.text_a, 
+        example.text_b, 
+        add_special_tokens=True, 
+        max_length=max_length, 
+        lang=example.language)
     else:
-      inputs = tokenizer.encode_plus(example.text_a, example.text_b, add_special_tokens=True, max_length=max_length)
+      inputs = tokenizer.encode_plus(
+        example.text_a, 
+        example.text_b,
+        add_special_tokens=True, 
+        max_length=max_length)
     
-    input_ids, token_type_ids = inputs["input_ids"], inputs["token_type_ids"]
+    input_ids = inputs["input_ids"]
+    if "token_type_ids" in inputs:
+      token_type_ids = inputs["token_type_ids"]
 
     # The mask has 1 for real tokens and 0 for padding tokens. Only real
     # tokens are attended to.
@@ -134,11 +145,13 @@ def convert_examples_to_features(
     if pad_on_left:
       input_ids = ([pad_token] * padding_length) + input_ids
       attention_mask = ([0 if mask_padding_with_zero else 1] * padding_length) + attention_mask
-      token_type_ids = ([pad_token_segment_id] * padding_length) + token_type_ids
+      if "token_type_ids" in inputs:
+        token_type_ids = ([pad_token_segment_id] * padding_length) + token_type_ids
     else:
       input_ids = input_ids + ([pad_token] * padding_length)
       attention_mask = attention_mask + ([0 if mask_padding_with_zero else 1] * padding_length)
-      token_type_ids = token_type_ids + ([pad_token_segment_id] * padding_length)
+      if "token_type_ids" in inputs:
+        token_type_ids = token_type_ids + ([pad_token_segment_id] * padding_length)
 
     if lang2id is not None:
       lid = lang2id.get(example.language, lang2id["en"])
@@ -150,9 +163,11 @@ def convert_examples_to_features(
     assert len(attention_mask) == max_length, "Error with input length {} vs {}".format(
       len(attention_mask), max_length
     )
-    assert len(token_type_ids) == max_length, "Error with input length {} vs {}".format(
-      len(token_type_ids), max_length
-    )
+    
+    if "token_type_ids" in inputs:
+      assert len(token_type_ids) == max_length, "Error with input length {} vs {}".format(
+        len(token_type_ids), max_length
+      )
 
     if output_mode == "classification":
       label = label_map[example.label]
@@ -167,10 +182,13 @@ def convert_examples_to_features(
       logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
       logger.info("sentence: %s" % " ".join(tokenizer.convert_ids_to_tokens(input_ids)))
       logger.info("attention_mask: %s" % " ".join([str(x) for x in attention_mask]))
-      logger.info("token_type_ids: %s" % " ".join([str(x) for x in token_type_ids]))
+      if "token_type_ids" in inputs:
+        logger.info("token_type_ids: %s" % " ".join([str(x) for x in token_type_ids]))
       logger.info("label: %s (id = %d)" % (example.label, label))
       logger.info("language: %s, (lid = %d)" % (example.language, lid))
 
+    if "token_type_ids" not in locals():
+      token_type_ids = None
     features.append(
       InputFeatures(
         input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, langs=langs, label=label

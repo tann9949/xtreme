@@ -27,9 +27,9 @@ import math
 import os
 import sys
 from dataclasses import dataclass, field
+from glob import glob
 from itertools import chain
 from typing import Optional, List, Dict, Any, Mapping
-from pathlib import Path
 import datasets
 import torch
 from datasets import load_dataset, concatenate_datasets
@@ -40,6 +40,7 @@ from transformers import (
     MODEL_FOR_MASKED_LM_MAPPING,
     AutoConfig,
     AutoModelForMaskedLM,
+    DataCollatorForLanguageModeling,
     XLMRobertaForMaskedLM,
     XLMRobertaTokenizer,
     AutoTokenizer,
@@ -57,6 +58,8 @@ from transformers.utils.versions import require_version
 from sklearn.metrics import accuracy_score
 from peft import LoraConfig, TaskType, get_peft_model, PeftModel, get_peft_model_state_dict
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
+
+DEFAULT_MAX_BLOCKSIZE = 512
 
 
 class SavePeftModelCallback(transformers.TrainerCallback):
@@ -78,76 +81,6 @@ class SavePeftModelCallback(transformers.TrainerCallback):
         peft_model_path = os.path.join(args.output_dir, "pt_lora_model")
         kwargs["model"].save_pretrained(peft_model_path)
         kwargs["tokenizer"].save_pretrained(peft_model_path)
-
-
-def accuracy(predictions, references, normalize=True, sample_weight=None):
-        return {
-            "accuracy": float(
-                accuracy_score(references, predictions, normalize=normalize, sample_weight=sample_weight)
-            )
-        }
-
-
-def compute_metrics(eval_preds):
-    preds, labels = eval_preds
-    # preds have the same shape as the labels, after the argmax(-1) has been calculated
-    # by preprocess_logits_for_metrics but we need to shift the labels
-    labels = labels[:, 1:].reshape(-1)
-    preds = preds[:, :-1].reshape(-1)
-    return accuracy(predictions=preds, references=labels)
-
-
-def preprocess_logits_for_metrics(logits, labels):
-    if isinstance(logits, tuple):
-        # Depending on the model and config, logits may contain extra tensors,
-        # like past_key_values, but logits always come first
-        logits = logits[0]
-    return logits.argmax(dim=-1)
-
-
-def fault_tolerance_data_collator(features: List) -> Dict[str, Any]:
-    if not isinstance(features[0], Mapping):
-        features = [vars(f) for f in features]
-    first = features[0]
-    batch = {}
-
-    # Special handling for labels.
-    # Ensure that tensor is created with the correct type
-    # (it should be automatically the case, but let's make sure of it.)
-    if "label" in first and first["label"] is not None:
-        label = first["label"].item() if isinstance(first["label"], torch.Tensor) else first["label"]
-        dtype = torch.long if isinstance(label, int) else torch.float
-        batch["labels"] = torch.tensor([f["label"] for f in features], dtype=dtype)
-    elif "label_ids" in first and first["label_ids"] is not None:
-        if isinstance(first["label_ids"], torch.Tensor):
-            batch["labels"] = torch.stack([f["label_ids"] for f in features])
-        else:
-            dtype = torch.long if isinstance(first["label_ids"][0], int) else torch.float
-            batch["labels"] = torch.tensor([f["label_ids"] for f in features], dtype=dtype)
-
-    # Handling of all other possible keys.
-    # Again, we will use the first element to figure out which key/values are not None for this model.
-
-    try:
-        for k, v in first.items():
-            if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
-                if isinstance(v, torch.Tensor):
-                    batch[k] = torch.stack([f[k] for f in features])
-                elif isinstance(v, np.ndarray):
-                    batch[k] = torch.tensor(np.stack([f[k] for f in features]))
-                else:
-                    batch[k] = torch.tensor([f[k] for f in features])
-    except ValueError: # quick fix by simply take the first example
-        for k, v in first.items():
-            if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
-                if isinstance(v, torch.Tensor):
-                    batch[k] = torch.stack([features[0][k]] * len(features))
-                elif isinstance(v, np.ndarray):
-                    batch[k] = torch.tensor(np.stack([features[0][k]] * len(features)))
-                else:
-                    batch[k] = torch.tensor([features[0][k]] * len(features))
-
-    return batch
 
 
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_MASKED_LM_MAPPING.keys())
@@ -399,7 +332,7 @@ def main():
     if model_args.tokenizer_name:
         tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name, **tokenizer_kwargs)
     elif model_args.tokenizer_name_or_path:
-        tokenizer = LlamaTokenizer.from_pretrained(model_args.tokenizer_name_or_path, **tokenizer_kwargs)
+        tokenizer = XLMRobertaTokenizer.from_pretrained(model_args.tokenizer_name_or_path, **tokenizer_kwargs)
     else:
         raise ValueError(
             "You are instantiating a new tokenizer from scratch. This is not supported by this script."
@@ -421,15 +354,17 @@ def main():
                 " before being passed to the model."
             )
         return output
+    
+    ##### load datasets #####
     if data_args.block_size is None:
         block_size = tokenizer.model_max_length
-        if block_size > 1024:
+        if block_size > DEFAULT_MAX_BLOCKSIZE:
             logger.warning(
-                "The chosen tokenizer supports a `model_max_length` that is longer than the default `block_size` value"
-                " of 1024. If you would like to use a longer `block_size` up to `tokenizer.model_max_length` you can"
-                " override this default with `--block_size xxx`."
+                f"The chosen tokenizer supports a `model_max_length` that is longer than the default `block_size` value"
+                f" of {DEFAULT_MAX_BLOCKSIZE}. If you would like to use a longer `block_size` up to `tokenizer.model_max_length` you can"
+                f" override this default with `--block_size xxx`."
             )
-            block_size = 1024
+            block_size = DEFAULT_MAX_BLOCKSIZE
     else:
         if data_args.block_size > tokenizer.model_max_length:
             logger.warning(
@@ -456,13 +391,12 @@ def main():
         return result
     with training_args.main_process_first(desc="dataset map tokenization and grouping"):
         lm_datasets = []
-        path = Path(data_args.dataset_dir)
-        files = [file.name for file in path.glob("*.txt")]
+        files = glob(f"{data_args.dataset_dir}/**/*.txt", recursive=True)
         if training_args.debug_mode is True:
             files = [files[0]]
-        for idx, file in enumerate(files):
-            data_file = os.path.join(path, file)
-            filename = ''.join(file.split(".")[:-1])
+        for idx, data_file in enumerate(sorted(files)):
+            file = os.path.basename(data_file)
+            filename = "".join(file.split(".")[:-1])
             cache_path = os.path.join(data_args.data_cache_dir, filename)
             os.makedirs(cache_path, exist_ok=True)
             try:
@@ -518,8 +452,7 @@ def main():
         logger.info(f"Num eval_samples  {len(eval_dataset)}")
         logger.info("training example:")
         logger.info(tokenizer.decode(eval_dataset[0]['input_ids']))
-
-
+    #############################
 
     if model_args.model_name_or_path:
         torch_dtype = (
@@ -527,7 +460,7 @@ def main():
             if model_args.torch_dtype in ["auto", None]
             else getattr(torch, model_args.torch_dtype)
         )
-        model = LlamaForCausalLM.from_pretrained(
+        model = XLMRobertaForMaskedLM.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
@@ -538,26 +471,19 @@ def main():
             low_cpu_mem_usage=True
         )
     else:
-        model = AutoModelForCausalLM.from_config(config)
+        model = AutoModelForMaskedLM.from_config(config)
         n_params = sum({p.data_ptr(): p.numel() for p in model.parameters()}.values())
         logger.info(f"Training new model from scratch - Total size={n_params/2**20:.2f}M params")
 
     model_vocab_size = model.get_output_embeddings().weight.size(0)
-    if not (
-       (model_vocab_size==32000 and len(tokenizer)==49953) or \
-       (model_vocab_size==32000 and len(tokenizer)==32000) or \
-       (model_vocab_size==49953 and len(tokenizer)==49953) or \
-       (model_vocab_size==49954 and len(tokenizer)==49954)
-    ):
-        raise ValueError(
-            f"The combination of base model (size: {model_vocab_size}) and tokenizer (size: {len(tokenizer)}) is not a valid configuration. Please check our project wiki for further information. \n"
-            "Valid configurations (base model / tokenizer):\n"
-            "- Continue pre-training original LLaMA: 32000 / 32000 \n"
-            "- Pre-training Chinese LLaMA based on original LLaMA: 32000 / 49953 \n"
-            "- Continue pre-training Chinese LLaMA: 49953 / 49953 \n"
-            "- Continue pre-training Chinese Alpaca: 49954 / 49954 \n")
 
-    model.resize_token_embeddings(len(tokenizer))
+    logger.info(f"Model `{model.name_or_path}` has a total of {model_vocab_size} vocab size")
+    logger.info(f"Tokenizer `{tokenizer.name_or_path}` has a total of {len(tokenizer)} vocab size")
+
+    if model_vocab_size != len(tokenizer):
+        logger.info(f"Resizing model vocab size from {model_vocab_size} to {len(tokenizer)}")
+        model.resize_token_embeddings(len(tokenizer))
+
     if training_args.peft_path is not None:
         logger.info("Peft from pre-trained model")
         model = PeftModel.from_pretrained(model, training_args.peft_path)
@@ -573,7 +499,7 @@ def main():
         logger.info(f"target_modules: {target_modules}")
         logger.info(f"lora_rank: {lora_rank}")
         peft_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM,
+            task_type=TaskType.TOKEN_CLS,
             target_modules=target_modules,
             inference_mode=False,
             r=lora_rank, lora_alpha=lora_alpha,
@@ -587,17 +513,17 @@ def main():
     ).__get__(model, type(model))
 
     # Initialize our Trainer
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm_probability=0.15,
+    )
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=eval_dataset if training_args.do_eval else None,
         tokenizer=tokenizer,
-        data_collator=fault_tolerance_data_collator,
-        compute_metrics=compute_metrics if training_args.do_eval and not is_torch_tpu_available() else None,
-        preprocess_logits_for_metrics=preprocess_logits_for_metrics
-        if training_args.do_eval and not is_torch_tpu_available()
-        else None,
+        data_collator=data_collator,
     )
     trainer.add_callback(SavePeftModelCallback)
     # Training

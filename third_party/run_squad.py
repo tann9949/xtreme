@@ -36,6 +36,9 @@ from transformers import (
     AlbertConfig,
     AlbertForQuestionAnswering,
     AlbertTokenizer,
+    CamembertConfig,
+    CamembertForQuestionAnswering,
+    CamembertTokenizer,
     BertConfig,
     BertForQuestionAnswering,
     BertTokenizer,
@@ -75,9 +78,18 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-from transformers import BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, XLNET_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_PRETRAINED_CONFIG_ARCHIVE_MAP
+from transformers import (
+    BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+    XLNET_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+    XLM_PRETRAINED_CONFIG_ARCHIVE_MAP,
+    CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP
+)
 ALL_MODELS = sum(
-    (tuple(conf.keys()) for conf in (BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, XLNET_PRETRAINED_CONFIG_ARCHIVE_MAP, XLM_PRETRAINED_CONFIG_ARCHIVE_MAP)),
+    (tuple(conf.keys()) for conf in (
+        BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+        XLNET_PRETRAINED_CONFIG_ARCHIVE_MAP, 
+        XLM_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP)),
     (),
 )
 
@@ -87,7 +99,8 @@ MODEL_CLASSES = {
     "xlm": (XLMConfig, XLMForQuestionAnswering, XLMTokenizer),
     "distilbert": (DistilBertConfig, DistilBertForQuestionAnswering, DistilBertTokenizer),
     "albert": (AlbertConfig, AlbertForQuestionAnswering, AlbertTokenizer),
-    "xlm-roberta": (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer)
+    "xlm-roberta": (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    "camembert": (CamembertConfig, CamembertForQuestionAnswering, CamembertTokenizer)
 }
 
 
@@ -326,7 +339,7 @@ def evaluate(args, model, tokenizer, prefix="", language='en', lang2id=None):
             inputs = {
                 "input_ids": batch[0],
                 "attention_mask": batch[1],
-                "token_type_ids": None if args.model_type in ["xlm", "distilbert", "xlm-roberta"] else batch[2],
+                "token_type_ids": None if args.model_type in ["xlm", "distilbert", "xlm-roberta", "camembert"] else batch[2],
             }
             example_indices = batch[3]
 
@@ -337,6 +350,12 @@ def evaluate(args, model, tokenizer, prefix="", language='en', lang2id=None):
                 inputs["langs"] = batch[6]
 
             outputs = model(**inputs)
+            
+            if args.model_name_or_path == "airesearch/wangchanberta-base-att-spm-uncased":
+                outputs = (
+                    outputs.start_logits,
+                    outputs.end_logits,
+                )
 
         for i, example_index in enumerate(example_indices):
             eval_feature = features[example_index.item()]

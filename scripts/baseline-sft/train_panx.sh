@@ -34,6 +34,12 @@ elif [ $MODEL == "xlm-mlm-100-1280" ] || [ $MODEL == "xlm-mlm-tlm-xnli15-1024" ]
   LC=" --do_lower_case"
 elif [ $MODEL == "xlm-roberta-large" ] || [ $MODEL == "xlm-roberta-base" ]; then
   MODEL_TYPE="xlmr"
+elif [ $MODEL == "airesearch/wangchanberta-base-att-spm-uncased" ]; then
+  MODEL_TYPE="camembert"
+  LC=" --do_lower_case"
+else
+  echo "unknown model type"
+  exit 1
 fi
 
 if [ $MODEL == "xlm-mlm-100-1280" ] || [ $MODEL == "xlm-roberta-large" ]; then
